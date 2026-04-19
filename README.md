@@ -1,7 +1,7 @@
 ## About
 This library lets you write parsers for text or for binary inputs.
 
-It does offer an approach for writing parsers, but does not require you to follow it. Overhead is minimal, and can be further bypassed via hot loop unrolling and other techniques, if performance is top-priority for your use-case.
+It does offer an approach for writing parsers with focus on backtracked variety, but does not require you to follow it. Overhead is minimal, and can be further bypassed via hot loop unrolling and other techniques, if performance is top-priority for your use-case.
 
 It went through many iterations over many months, so it's battle-hardened by now. 
 
