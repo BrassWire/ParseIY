@@ -3,7 +3,7 @@ This library lets you write parsers for text or for binary inputs.
 
 It does offer an approach for writing parsers with focus on backtracked variety, but does not require you to follow it. Overhead is minimal, and can be further bypassed via hot loop unrolling and other techniques, if performance is top-priority for your use-case.
 
-It went through many iterations over many months, so it's battle-hardened by now. 
+Despite being only ~1k lines of code, it went through many iterations over many months and multiyear gaps, so it's all battle-hardened by now. 
 
 ## Types
 - `ParserData` - holds parser position. Supports backtracking, syntax highlighting and logging errors/warnings/suggestions. Offers couple basic built-in parser functions.
