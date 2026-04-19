@@ -1,5 +1,5 @@
-This library lets you write parsers for text or for binary inputs.
-It does offer an approach for writing parsers, but does not require you to follow it. Overhead is minimal, and can be further bypassed via hot loop unrolling and other techniques, if performance is top-priority for your use-case.
+This library lets you write parsers for text or for binary inputs.<br>
+It does offer an approach for writing parsers, but does not require you to follow it. Overhead is minimal, and can be further bypassed via hot loop unrolling and other techniques, if performance is top-priority for your use-case.<br>
 It went through many iterations over many months, so it's battle-hardened by now. 
 
 Library introduces these types:
@@ -10,5 +10,5 @@ Library introduces these types:
 
 This library also ships couple simple extra parsers in separate namespaces.
 
-## Code example
-ToDo
+## Parser examples
+(To be done)
