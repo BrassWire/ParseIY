@@ -16,6 +16,14 @@ public static Parsed<StringView> ReadHelloWorld(this ParserData p) {
 	return p.Ok(p.Substring()); 
 }
 ```
+```beef
+let p = scope ParserData("hello worm")..ReadHelloWorld();
+Console.WriteLine(p.ToLogsForTextSource(..scope .()));
+
+// ERROR: Expected 'world' in hello world at line 1:7
+// hello worm
+//       ^
+```
 
 ## Types
 - `ParserData` - holds parser position. Supports backtracking, syntax highlighting and logging errors/warnings/suggestions. Offers couple basic built-in parser functions, and ability to watch parsing progress inside the IDE watch.
