@@ -20,5 +20,5 @@ public static Parsed<StringView> ReadHelloWorld(this ParserData p) {
 ## Types
 - `ParserData` - holds parser position. Supports backtracking, syntax highlighting and logging errors/warnings/suggestions. Offers couple basic built-in parser functions.
 - `Parsed<T>` - used as return in parser functions. Holds a parsed value if parser had matched correct or erroneous symbol, or holds no value if parser could not be applied and backtrack should be triggered.
-- `IndentedLineBuffer` - helps to convert AST back into raw text by applying indentations via `using (buffer.Shifted)` syntax.
 - `ExpressionReader<TNode>` - abstract type for quickly making expression parsers. It implements general algorithm for parsing binary (and not only) expression trees, while allowing developer to override any detail.
+- `IndentedLineBuffer` - helps to convert AST back into raw text by marking indentations via `using (buffer.Shifted)` syntax. While it's not needed for parsing, this type was just too useful to not also include it.
