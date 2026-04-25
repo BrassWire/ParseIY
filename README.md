@@ -16,6 +16,7 @@ public static Parsed<StringView> ReadHelloWorld(this ParserData p) {
 	return p.Ok(p.Substring()); 
 }
 
+// Running parser:
 let p = scope ParserData("hello worm")..ReadHelloWorld();
 Console.WriteLine(p.ToLogsForTextSource(..scope .()));
 
