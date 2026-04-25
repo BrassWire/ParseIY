@@ -10,7 +10,7 @@ public static
 			ret = true;
 
 		if (!ret) return p.Mismatch;
-		return p.Ok(p.LengthSinceStart);
+		return p.Ok(p.Substring());
 	}
 
 	public static Parsed<StringView> ReadInlineSpacing(this ParserData p) {
@@ -21,7 +21,7 @@ public static
 			ret = true;
 
 		if (!ret) return p.Mismatch;
-		return p.Ok(p.LengthSinceStart);
+		return p.Ok(p.Substring());
 	}
 
 	[Inline]

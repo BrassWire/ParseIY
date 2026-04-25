@@ -372,34 +372,30 @@ public class ParserData {
 			result += '\n';
 
 			for (var idx in lineStart ..< lineEnd) {
-				result += scope String(' ', entry.max - lineStart);
-				result += '^';
+				result += entry.min <= idx && idx <= entry.max ? '^' : ' ';
 			}
 		}
 	}
 
 	private (int, int, int, int) getLineInfo(int pos) {
-		var lineCount = 0, lineStart = 0, column = 0;
+		var lineStart = -1, lineEnd = source.IndexOf('\n', pos), line = 0, column = 0;
+
 
 		for (var i = pos - 1; i >= 0; i--) {
 			if (source[i] == '\n') {
-				lineCount++;
-				if (lineStart < 0) {
-					lineStart = i + 1;
-				}
+				line++;
+				if (lineStart < 0) { lineStart = i + 1; }
 			}
 		}
 
+		if (lineStart < 0) { lineStart = 0; }
+		if (lineEnd < 0) { lineEnd = source.Length; }
+
 		for (let ch in source[lineStart ..< pos].DecodedChars) {
-			column++;
+			column++; // Because of non-ASCII chars
 		}
 
-		var lineEnd = source.IndexOf('\n', pos);
-		if (lineEnd < 0) {
-			lineEnd = source.Length;
-		}
-
-		return (lineStart, lineEnd, lineCount, column);
+		return (lineStart, lineEnd, line, column);
 	}
 #endregion
 
