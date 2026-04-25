@@ -40,7 +40,7 @@ public class ParserData {
 		logs = new .(16);
 	}
 
-	[Inline] public StringView LengthSinceStart => source[saves.Back.pos..<pos];
+	[Inline] public StringView Substring() => source[saves.Back.pos..<pos];
 
 	[Inline] public int LengthLeft => source.Length - pos;
 
