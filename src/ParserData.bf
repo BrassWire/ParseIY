@@ -17,20 +17,19 @@ public class ParserData {
 	/// (own)
 	public List<SavePoint>	saves;
 
-	/// Logged errors, warnings, suggestions, symbol highlights.
+	/// Logged errors, warnings, suggestions.
 	/// (own)
 	public List<LogEntry>	logs;
 
 	/// Position that's about to be parsed from
 	public int         		pos;
 
-	/// Usually used for syntax highlighting, or otherwise for debugging
-	public bool				autologNamedSymbols;
+	public bool tracingIsEnabled;
 
 	public ~this() {
 		Debug.Assert(saves.Count == 0);
 		delete saves;
-		DeleteContainerAndItems!(logs);
+		DeleteContainerAndDisposeItems!(logs);
 	}
 	
 	[AllowAppend]
@@ -61,8 +60,8 @@ public class ParserData {
 	/// Should be returned if symbol was recognized. It includes both correct and malformed symbols.
 	[NoDiscard]
 	public Parsed<T> Ok<T>(T v) {
-		if (autologNamedSymbols && saves.Count > 0 && saves.Back.name != null) {
-			logs.Add(new LogEntry(.Symbol, null, saves.Back, pos...pos));
+		if (tracingIsEnabled && saves.Count > 0 && saves.Back.name != null) {
+			logs.Add(LogEntry(.Trace, null, saves.Back, saves.Back.pos...(Math.Max(saves.Back.pos, pos - 1))));
 		}
 		saves.PopBack();
 		return .OkUntracked(v);
@@ -92,7 +91,7 @@ public class ParserData {
 		let lastSave = saves.PopBack();
 		for (var i = logs.Count - 1; i >= 0; i--) {
 			if (lastSave == logs.Back.lastSave) {
-				delete logs.PopBack();
+				logs.PopBack().Dispose();
 			} else {
 				break;
 			}
@@ -226,14 +225,14 @@ public class ParserData {
 		=> SkipExactly((char8) byte);
 
 	/// Reads struct directly from binary
-	public Parsed<T> ReadRaw<T>() where T: ValueType {
+	public Parsed<T> ReadBytes<T>() where T: ValueType {
 		if (sizeof(T) > LengthLeft)
 			return .MismatchUntracked;
 		return .OkUntracked(BitConverter.Convert<uint8[sizeof(T)], T>(readBytes<const sizeof(T)>()));
 	}
 
 	/// Reads struct directly from reversed order (big-endian) binary
-	public Parsed<T> ReadBackwardRaw<T>() where T: ValueType {
+	public Parsed<T> ReadBackwardBytes<T>() where T: ValueType {
 		if (LengthLeft >= sizeof(T)) {
 			var bytes = readBytes<const sizeof(T)>();
 			endianSwap(&bytes, sizeof(T));
@@ -261,20 +260,19 @@ public class ParserData {
 #endregion
 
 #region Logging
-	public void LogError(StringView description)
-		=> logs.Add(new LogEntry(.Error, new  .(description), saves.Back, pos...pos));
+	public void LogError(StringView description, ClosedRange range = default)
+		=> logs.Add(LogEntry(.Error, new  .(description), saves.Back, range != default ? range : pos...pos));
 
-	public void LogWarning(StringView description)
-		=> logs.Add(new LogEntry(.Warning, new .(description), saves.Back, pos...pos));
+	public void LogWarning(StringView description, ClosedRange range = default)
+		=> logs.Add(LogEntry(.Warning, new .(description), saves.Back, range != default ? range : pos...pos));
 
-	public void LogSuggestion(StringView description)
-		=> logs.Add(new LogEntry(.Suggestion, new .(description), saves.Back, pos...pos));
+	public void LogSuggestion(StringView description, ClosedRange range = default)
+		=> logs.Add(LogEntry(.Suggestion, new .(description), saves.Back, range != default ? range : pos...pos));
 
-	public class LogEntry {
-		public String info ~ delete _;
+	public struct LogEntry : IDisposable {
 		public SavePoint lastSave;
-		public int min;
-		public int max;
+		public int min, max;
+		public String info;
 		public LogEntry.Type logType;
 
 		public this(LogEntry.Type logType, String desc, SavePoint lastSave, ClosedRange range) {
@@ -285,11 +283,15 @@ public class ParserData {
 			this.info = desc;
 		}
 
+		public void Dispose() {
+			delete info;
+		}
+
 		public enum Type {
-			case Symbol, Suggestion, Warning, Error;
-			public void ToLogRerpesentation(String strBuffer) {
+			case Trace, Suggestion, Warning, Error;
+			public override void ToString(String strBuffer) {
 				switch (this) {
-				case Symbol:		strBuffer += "SYMBOL";
+				case Trace:			strBuffer += "TRACE";
 				case Suggestion:	strBuffer += "SUGGESTION";
 				case Warning:		strBuffer += "WARNING";
 				case Error:			strBuffer += "ERROR";
@@ -298,102 +300,87 @@ public class ParserData {
 		}
 	}
 
-	public void ToLogsForBinarySource(String strBuffer, StringView sourceName = default, int bytesPerLine = 16, int groupSize = 1) {
+	public void ToLogsForBinarySource(String result, StringView sourceName = default, int bytesPerLine = 16, int groupSize = 1) {
 		var i = 0;
 		for (let entry in logs) {
-			if (entry.logType == .Symbol) { continue; }
-			if (i++ > 0) { strBuffer += "\n\n"; }
-			let line = getHexLineInfo(entry.max, bytesPerLine);
-			strBuffer += scope $"{entry.logType.ToLogRerpesentation(..scope .())}: {entry.info == null ? "Unknown" : entry.info} at offset {entry.max:X}";
-			if (!sourceName.IsEmpty) { strBuffer += scope $" in {sourceName}"; }
-			strBuffer += scope $"\n\n{(line.start - bytesPerLine):X8}  ";
-			if (getHexLine(strBuffer, (line.start - bytesPerLine) ..< (line.start), groupSize)) {
-				strBuffer += "\n\n";
-			}
+			if (entry.logType == .Trace) { continue; }
+			let lineStart = entry.max - entry.max % bytesPerLine;
 
-			var utf8 = scope String(16);
-			var leftOver = 0;
-			let lineStartInStrBuffer = strBuffer.Length;
-			var indent = -1;
-			strBuffer..Append(scope $"{line.start:X8}  ");
-			for (var byteIdx = line.start; byteIdx < line.start + bytesPerLine; byteIdx++) {
-				if (byteIdx == entry.max) {
-					indent = strBuffer.Length - lineStartInStrBuffer;
-				}
-
-				if (byteIdx < line.end) {
-					strBuffer += scope $"{((uint8)source[byteIdx]):X2}";
-					utf8 += source[byteIdx];
-				} else {
-					strBuffer += "  ";
-				}
-				if (++leftOver >= groupSize) {
-					strBuffer += ' ';
-					leftOver -= groupSize;
-				}
-			}
-
-			if (indent < 0) {
-				indent = strBuffer.Length - lineStartInStrBuffer;
-			}
-
-			strBuffer..Append("  |", utf8, "|");
-			strBuffer..Append('\n')..Append(scope String(' ', indent), "^^");
+			result += i++ > 0 ? "\n\n" : "";
+			result += entry.logType;
+			result += ": ";
+			result += entry.info == null ? "Unknown" : entry.info;
+			result += " at offset ";
+			entry.max.ToString(result, "X", null);
+			result += sourceName.IsEmpty ? "" : " in ";
+			result += sourceName.IsEmpty ? "" : sourceName;
+			result += "\n\n";
+			getHexLine(result, entry, bytesPerLine, groupSize, lineStart - bytesPerLine);
+			getHexLine(result, entry, bytesPerLine, groupSize, lineStart);
 		}
 	}
 
-	private bool getHexLine(String strBuffer, Range range, int groupSize) {
-		if (range.End <= 0 || range.Start >= source.Length) {
-			return false;
-		}
+	private void getHexLine(String result, LogEntry marker, int bytesPerLine, int groupSize, int lineStart) {
+		let lineEnd = lineStart + bytesPerLine;
+		if (lineEnd <= 0 || lineStart >= source.Length) { return; }
 
-		var utf8 = scope String(16);
+		lineStart.ToString(result, "X8", null);
+		result += "  ";
+		let mark = scope String(' ', 10);
+
 		var leftOver = 0;
-		for (var byteIdx in range) {
-			if (byteIdx >= source.Length) { break; }
-			if (byteIdx >= 0) {
-				strBuffer += scope $"{((uint8)source[byteIdx]):X2}";
-				utf8 += source[byteIdx];
+		for (let i < bytesPerLine) {
+			let idx = lineStart + i;
+			mark += marker.min <= idx && idx <= marker.max ? "^^" : "  ";
+			if (0 <= idx && idx < source.Length) {
+				((uint8)source[idx]).ToString(result, "X2", null);
 			} else {
-				strBuffer += "  ";
+				result.Append("  ");
 			}
 			if (++leftOver >= groupSize) {
-				strBuffer += ' ';
+				result += ' ';
+				mark += ' ';
 				leftOver -= groupSize;
 			}
 		}
-		strBuffer..Append("  |", utf8, "|");
-		return true;
+
+		result += "  |";
+		result += source[Math.Max(0, lineStart) ..< Math.Min(source.Length, lineEnd)];
+		result += "|\n";
+		result += mark;
+		result += '\n';
 	}
 
-	private (int start, int end) getHexLineInfo(int pos, int bytesPerLine) {
-		let lineStart = pos - pos % bytesPerLine;
-		return (lineStart, Math.Min(lineStart + bytesPerLine, source.Length));
-	}
-
-	public void ToLogsForTextSource(String strBuffer, StringView sourceName = default) {
+	public void ToLogsForTextSource(String result, StringView sourceName = default) {
 		var i = 0;
 		for (let entry in logs) {
-			if (entry.logType == .Symbol) { continue; }
-			if (i++ > 0) { strBuffer += "\n\n"; }
-			let line = getLineInfo(entry.max);
-			strBuffer += scope $"{entry.logType.ToLogRerpesentation(..scope .())}: {entry.info == null ? "Unknown" : entry.info} at line {line.idx + 1}:{getCharIdxFromLineStart(entry.max, line.start) + 1}";
-			if (!sourceName.IsEmpty) { strBuffer += scope $" in {sourceName}"; }
-			strBuffer..Append("\n", source[line.start ..< getLineEnd(entry.max)], "\n");
-			strBuffer..Append(scope String(' ', entry.max - line.start), "^");
+			if (entry.logType == .Trace) { continue; }
+			let (lineStart, lineEnd, line, column) = getLineInfo(entry.max);
+
+			result += i++ > 0 ? "\n\n" : "";
+			result += entry.logType;
+			result += ": ";
+			result += entry.info == null ? "Unknown" : entry.info;
+			result += " at line ";
+			result += line + 1;
+			result += ':';
+			result += column + 1;
+			result += sourceName.IsEmpty ? "" : " in ";
+			result += sourceName.IsEmpty ? "" : sourceName;
+			result += '\n';
+			result += source[lineStart ..< lineEnd];
+			result += '\n';
+
+			for (var idx in lineStart ..< lineEnd) {
+				result += scope String(' ', entry.max - lineStart);
+				result += '^';
+			}
 		}
 	}
 
-	private int getCharIdxFromLineStart(int pos, int lineStart) {
-		var count = 0;
-		for (let ch in source[lineStart ..< pos]) {
-			count++;
-		}
-		return count;
-	}
+	private (int, int, int, int) getLineInfo(int pos) {
+		var lineCount = 0, lineStart = 0, column = 0;
 
-	private (int idx, int start) getLineInfo(int pos) {
-		var lineCount = 0, lineStart = 0;
 		for (var i = pos - 1; i >= 0; i--) {
 			if (source[i] == '\n') {
 				lineCount++;
@@ -402,13 +389,17 @@ public class ParserData {
 				}
 			}
 		}
-		return (lineCount, lineStart);
-	}
 
-	private int getLineEnd(int pos) {
+		for (let ch in source[lineStart ..< pos].DecodedChars) {
+			column++;
+		}
+
 		var lineEnd = source.IndexOf('\n', pos);
-		if (lineEnd < 0) { lineEnd = source.Length; }
-		return lineEnd;
+		if (lineEnd < 0) {
+			lineEnd = source.Length;
+		}
+
+		return (lineStart, lineEnd, lineCount, column);
 	}
 #endregion
 

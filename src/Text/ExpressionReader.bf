@@ -3,7 +3,13 @@ namespace ParseIY.Text;
 using System.Collections;
 
 /// TNode - expression node. AddArg() is called on parsed operators/functions to sequentially attach operands/arguments.
-public abstract class ExpressionReader<TNode>: this(ParserData p) {
+public abstract class ExpressionReader<TNode> {
+	protected ParserData p;
+
+	public this(ParserData p) {
+		this.p = p;
+	}
+
 	public virtual Parsed<TNode> ReadExpression() {
 		p.Start("expression");
 		var trimEnd = p.pos;

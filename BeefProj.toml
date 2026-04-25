@@ -1,0 +1,10 @@
+FileVersion = 1
+
+[Project]
+Name = "parseIY"
+StartupObject = "ParseIY.Program"
+DefaultNamespace = "ParseIY"
+
+[[ProjectFolder.Items]]
+Type = "AutoFolder"
+Name = "Text"
