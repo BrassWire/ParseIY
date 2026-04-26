@@ -52,6 +52,7 @@ public abstract class ExpressionReader<TNode> {
 		for (var i = infixQueue.Count - 2; i >= 0; i--) {
 			AddArg(infixQueue[i], infixQueue[i + 1]);
 		}
+		p.pos = trimEnd;
 		return p.Ok(infixQueue[0]);
 	}
 
