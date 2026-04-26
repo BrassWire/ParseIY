@@ -40,7 +40,7 @@ public static
 		var unread = true;
 		var outOfRange = false;
 		while (true) {
-			if (unread && p.LengthLeft > 0 && (p.source[p.pos] == '-' || p.source[p.pos] == '+'))
+			if (unread && p.LengthLeft() > 0 && (p.source[p.pos] == '-' || p.source[p.pos] == '+'))
 				isNegative = (p.source[p.pos++] == '-');
 
 			if (p.ReadDigit().HasMatch(let digit)) {
@@ -72,7 +72,7 @@ public static
 		double val = 0;
 		encounteredPoint = false;
 		while (true) {
-			if (unread && p.LengthLeft > 0 && (p.source[p.pos] == '-' || p.source[p.pos] == '+'))
+			if (unread && p.LengthLeft() > 0 && (p.source[p.pos] == '-' || p.source[p.pos] == '+'))
 				isNegative = (p.source[p.pos++] == '-');
 
 			if (p.ReadDigit().HasMatch(let digit)) {
@@ -93,6 +93,7 @@ public static
 		}
 	}
 
+	/// Word token traditionally used in programming syntax
 	public static Parsed<StringView> ReadKeyword(this ParserData p, StringView name, params Span<StringView> names) {
 		if (p.ReadKeyword(name).HasMatch(let r)) {
 			return .OkUntracked(r);
@@ -103,6 +104,7 @@ public static
 		return .MismatchUntracked;
 	}
 
+	/// Word token traditionally used in programming syntax
 	public static Parsed<StringView> ReadKeyword(this ParserData p, StringView name) {
 		p.Start();
 		if (p.SkipExactly(name) && !p.InlineTry(p.Start(), (p.ReadChar8().HasMatch(let ch) && (ch.IsLetterOrDigit || ch == '_'))))
@@ -110,22 +112,25 @@ public static
 		return p.Mismatch;
 	}
 
-	public static Parsed<StringView> ReadQuotedText(this ParserData p, StringView quote, bool singleLine = false) {
+	public static Parsed<StringView> ReadQuotedText(this ParserData p, StringView quotationMark, bool singleLine = false) {
 		p.Start();
 
-		if (!p.SkipExactly(quote)) {
+		if (!p.SkipExactly(quotationMark)) {
 			return p.Mismatch;
 		}
 
+		let qmLen = quotationMark.Length;
 		while (true) {
-			if (p.SkipExactly(quote)) {
-				return p.Ok(p.source.Substring((p.saves.Back.pos + quote.Length) ..< (p.pos - quote.Length)));
+			if (p.SkipExactly(quotationMark)) {
+				return p.Ok(p.Substring()[qmLen ..< ^qmLen]);
 			} else if (!p.ReadChar().HasMatch(let ch)) {
 				p.LogError("Quotation did not end");
-				return p.Mismatch;
+				return p.Ok(p.Substring()[qmLen ..< ^0]);
 			} else if (singleLine && ch == '\n') {
-				p.LogError("This quotation type does not expect a line break");
-				return p.Mismatch;
+				p.LogError("Unexpected line break inside quoted text");
+				return p.Ok(p.Substring()[qmLen ..< ^1]);
+			} else {
+				continue;
 			}
 		}
 	}

@@ -8,7 +8,7 @@ namespace ParseIY;
 /// Provides utilities for mismatch backtracking, syntax highlighting, and reporting oddities in symbols.
 public class ParserData {
 	/// For displaying currently parsed position into a debugger watch.
-	static String mDebuggerWatchBuffer;
+	private static String mDebuggerWatchBuffer;
 
 	/// char8 or byte sequence to be parsed
 	public StringView		source;
@@ -42,7 +42,7 @@ public class ParserData {
 
 	[Inline] public StringView Substring() => source[saves.Back.pos..<pos];
 
-	[Inline] public int LengthLeft => source.Length - pos;
+	[Inline] public int LengthLeft() => source.Length - pos;
 
 	public int LengthLeftUntilTerminator(uint8 terminatorByte) {
 		let length = source.Length;
@@ -226,14 +226,14 @@ public class ParserData {
 
 	/// Reads struct directly from binary
 	public Parsed<T> ReadBytes<T>() where T: ValueType {
-		if (sizeof(T) > LengthLeft)
+		if (sizeof(T) > LengthLeft())
 			return .MismatchUntracked;
 		return .OkUntracked(BitConverter.Convert<uint8[sizeof(T)], T>(readBytes<const sizeof(T)>()));
 	}
 
 	/// Reads struct directly from reversed order (big-endian) binary
 	public Parsed<T> ReadBackwardBytes<T>() where T: ValueType {
-		if (LengthLeft >= sizeof(T)) {
+		if (LengthLeft() >= sizeof(T)) {
 			var bytes = readBytes<const sizeof(T)>();
 			endianSwap(&bytes, sizeof(T));
 			return .OkUntracked(BitConverter.Convert<uint8[sizeof(T)], T>(bytes));
@@ -304,7 +304,6 @@ public class ParserData {
 		var i = 0;
 		for (let entry in logs) {
 			if (entry.logType == .Trace) { continue; }
-			let lineStart = entry.max - entry.max % bytesPerLine;
 
 			result += i++ > 0 ? "\n\n" : "";
 			result += entry.logType;
@@ -315,12 +314,17 @@ public class ParserData {
 			result += sourceName.IsEmpty ? "" : " in ";
 			result += sourceName.IsEmpty ? "" : sourceName;
 			result += "\n\n";
-			getHexLine(result, entry, bytesPerLine, groupSize, lineStart - bytesPerLine);
-			getHexLine(result, entry, bytesPerLine, groupSize, lineStart);
+
+			let firstLine = (entry.min / bytesPerLine) - 1;
+			let lastLine = (entry.max / bytesPerLine) + 1;
+			for (let line in firstLine ... lastLine) {
+				getHexLine(result, entry, bytesPerLine, groupSize, line);
+			}
 		}
 	}
 
-	private void getHexLine(String result, LogEntry marker, int bytesPerLine, int groupSize, int lineStart) {
+	private void getHexLine(String result, LogEntry marker, int bytesPerLine, int groupSize, int line) {
+		let lineStart = line * bytesPerLine;
 		let lineEnd = lineStart + bytesPerLine;
 		if (lineEnd <= 0 || lineStart >= source.Length) { return; }
 
@@ -380,7 +384,6 @@ public class ParserData {
 	private (int, int, int, int) getLineInfo(int pos) {
 		var lineStart = -1, lineEnd = source.IndexOf('\n', pos), line = 0, column = 0;
 
-
 		for (var i = pos - 1; i >= 0; i--) {
 			if (source[i] == '\n') {
 				line++;
@@ -388,12 +391,9 @@ public class ParserData {
 			}
 		}
 
-		if (lineStart < 0) { lineStart = 0; }
 		if (lineEnd < 0) { lineEnd = source.Length; }
-
-		for (let ch in source[lineStart ..< pos].DecodedChars) {
-			column++; // Because of non-ASCII chars
-		}
+		if (lineStart < 0) { lineStart = 0; }
+		for (let ch in source[lineStart ..< pos].DecodedChars) { column++; }
 
 		return (lineStart, lineEnd, line, column);
 	}

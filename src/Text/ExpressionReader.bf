@@ -69,7 +69,7 @@ public abstract class ExpressionReader<TNode> {
 		return p.Ok(expression);
 	}
 
-	/// Atom or unary (prefix/postfix) operator
+	/// Parses atom possibly wrapped into unary (prefix/postfix) operators
 	public virtual Parsed<TNode> ReadOperand() {
 		p.Start("operand");
 		var trimEnd = p.pos;
@@ -109,23 +109,32 @@ public abstract class ExpressionReader<TNode> {
 		p.pos = trimEnd;
 		return p.Ok(tail);
 	}
-	
+
+	/// Infix operators: +, -, *, /, &&, &, ||, |
 	public abstract Parsed<TNode> ReadInfix();
 
+	/// Rates infix operator on a numeric scale, which is then used by `ExpressionReader.LeftInfixPrecedes()`
 	public abstract int GetPrecedence(TNode operation);
 
+	/// Adds argument to an operator (infix, postfix, prefix) node
 	public abstract void AddArg(TNode operation, TNode nextOperand);
 
+	/// Deletion of class or disposal of struct
 	public abstract void DisposeOfNode(TNode node);
 
+	/// Simplest objects to be operated upon: numbers, varnames, text literals.
 	public abstract Parsed<TNode> ReadAtom();
 
+	/// Prefix operators: !a, ~a, &a
 	public virtual Parsed<TNode> ReadPrefix() { return .MismatchUntracked; }
 
+	/// Postfix operators: a[b]
 	public virtual Parsed<TNode> ReadPostfix(TNode tail) { return .MismatchUntracked; }
 
+	/// Multi-operators such as ternaries: `a ? b : c`
 	public virtual Parsed<TNode> ReadDistfix(TNode term) { return .MismatchUntracked; }
 
+	/// Spacing and comments
 	public virtual bool SkipTrivia() { return p.ReadSpacing().HasMatch; }
 
 	/// Override if you need right to left operators (like assignment)
