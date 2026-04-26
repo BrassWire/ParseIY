@@ -11,7 +11,7 @@ public static Parsed<int> ReadMyNumber(this ParserData p) {
 	if (!p.ReadKeyword("number").HasMatch) { return p.Mismatch; }
 	// Past this point, we're sure we are using correct subparser. If error happens, we simply log it. 
 	p.ReadSpacing();
-	if (!p.ReadNumberAsInt().HasMatch(let number) { p.LogError("Expected an integer"); }
+	if (!p.ReadNumberAsInt().HasMatch(var number) { p.LogError("Expected an integer"); number = 0; }
 
 	return p.Ok(number); 
 }
