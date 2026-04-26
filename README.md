@@ -11,7 +11,7 @@ public static Parsed<StringView> ReadHelloWorld(this ParserData p) {
 	if (!p.ReadKeyword("hello").HasMatch) { return p.Mismatch; }
 	// Past this point, we're sure we are using correct subparser. If error happens, we simply log it. 
 	p.ReadSpacing();
-	if (!p.ReadKeyword("world").HasMatch) { p.LogError("Expected 'world' in hello world"); }
+	if (!p.ReadKeyword("world").HasMatch(let world)) { p.LogError("Expected 'world' in hello world"); }
 
 	return p.Ok(p.Substring()); 
 }
