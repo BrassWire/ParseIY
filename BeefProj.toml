@@ -1,10 +1,7 @@
 FileVersion = 1
+Dependencies = {corlib = "*"}
 
 [Project]
 Name = "parseIY"
-StartupObject = "ParseIY.Program"
+TargetType = "BeefLib"
 DefaultNamespace = "ParseIY"
-
-[[ProjectFolder.Items]]
-Type = "AutoFolder"
-Name = "Text"
