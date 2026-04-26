@@ -28,5 +28,5 @@ Console.WriteLine(p.ToLogsForTextSource(..scope .()));
 ## Types
 - `ParserData` - holds parser position. Supports backtracking, syntax highlighting and logging errors/warnings/suggestions. Offers couple basic built-in parser functions, and ability to watch parsing progress inside the IDE watch.
 - `Parsed<T>` - used as return in parser functions. Holds a parsed value if parser had matched correct or erroneous symbol, or holds no value if parser could not be applied and backtrack should be triggered.
-- `ExpressionReader<TNode>` - abstract type for quickly making expression parsers. It implements general algorithm for parsing binary (and not only) expression trees, while allowing developer to override any detail.
+- `ExpressionReader<TNode>` - abstract type helping with making expression tree parsers. It provides a generalized algorithm, while leaving it up to developer what subparsers to use, and what AST node type to use (a single class, a single struct, hierarchy of classes, etc) 
 - `IndentedLineBuffer` - helps to convert AST back into raw text by marking indentations via `using (buffer.Shifted)` syntax. While it's not needed for parsing, this type was just too useful to not also include it.
