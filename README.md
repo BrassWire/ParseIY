@@ -1,5 +1,5 @@
 ## About
-ParseIY provides few simple well-refined types that make writing parsers a lot easier
+ParseIY provides few simple types that were refined over multiple years and make writing parsers a lot easier
 
 Supports both binary and UTF8 text as inputs
 
