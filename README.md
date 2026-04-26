@@ -4,25 +4,25 @@ ParseIY provides few simple well-refined types that make writing parsers a lot e
 Supports both binary and UTF8 text as inputs
 
 ```beef
-/// Scannerless top-down parser for reading 'hello world'
-public static Parsed<StringView> ReadHelloWorld(this ParserData p) {
+/// Scannerless top-down parser for reading 'number 123'
+public static Parsed<int> ReadMyNumber(this ParserData p) {
 	p.Start(); // Save-point for backtracking
 
-	if (!p.ReadKeyword("hello").HasMatch) { return p.Mismatch; }
+	if (!p.ReadKeyword("number").HasMatch) { return p.Mismatch; }
 	// Past this point, we're sure we are using correct subparser. If error happens, we simply log it. 
 	p.ReadSpacing();
-	if (!p.ReadKeyword("world").HasMatch(let world)) { p.LogError("Expected 'world' in hello world"); }
+	if (!p.ReadNumberAsInt().HasMatch(let number) { p.LogError("Expected an integer"); }
 
-	return p.Ok(p.Substring()); 
+	return p.Ok(number); 
 }
 
 // Running parser:
-let p = scope ParserData("hello worm")..ReadHelloWorld();
+let p = scope ParserData("number a")..ReadMyNumber();
 Console.WriteLine(p.ToLogsForTextSource(..scope .()));
 
-// ERROR: Expected 'world' in hello world at line 1:7
-// hello worm
-//       ^
+// ERROR: Expected an integer at line 1:8
+// number a
+//        ^
 ```
 
 ## Types
