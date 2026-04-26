@@ -126,10 +126,10 @@ public abstract class ExpressionReader<TNode> {
 	/// Simplest objects to be operated upon: numbers, varnames, text literals.
 	public abstract Parsed<TNode> ReadAtom();
 
-	/// Prefix operators: !a, ~a, &a
+	/// Prefix operators: !a, ~a, &a, ++a
 	public virtual Parsed<TNode> ReadPrefix() { return .MismatchUntracked; }
 
-	/// Postfix operators: a[b]
+	/// Postfix operators: a[b], a.b, a.b(), a++
 	public virtual Parsed<TNode> ReadPostfix(TNode tail) { return .MismatchUntracked; }
 
 	/// Multi-operators such as ternaries: `a ? b : c`
