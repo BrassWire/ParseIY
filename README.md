@@ -42,7 +42,7 @@ A: Most overhead usually comes not from parsing algorithm itself, but from which
 
 Q: Don't top-down parsers have exponential time complexity?
 
-A: Theoretically, yes. In practice though, you are the one writing a parser algorithm, so it's up to you whether it's O(n) or O(exp(exp(exp(N))))
+A: Theoretically, yes. In practice though, you are the one writing a parser algorithm, so it's up to you whether it's linear in time or not.
 
 Q: What if I don't want to have any overhead that comes with backtracking approach?
 
