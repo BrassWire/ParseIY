@@ -129,7 +129,7 @@ public abstract class ExpressionReader<TNode> {
 	/// Prefix operators: !a, ~a, &a, ++a
 	public virtual Parsed<TNode> ReadPrefix() { return .MismatchUntracked; }
 
-	/// Postfix operators: a[b], a.b, a.b(), a++
+	/// Postfix operators: a[b], a.x, a(b), a++
 	public virtual Parsed<TNode> ReadPostfix(TNode tail) { return .MismatchUntracked; }
 
 	/// Multi-operators such as ternaries: `a ? b : c`
