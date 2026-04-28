@@ -9,11 +9,15 @@ public static Parsed<int> ReadMyNumber(this ParserData p) {
 	p.Start(); // Save-point for backtracking on mismatch
 
 	if (!p.ReadKeyword("number").HasMatch) { return p.Mismatch; }
-	// Past this point, we won't be backtracking since we're confident we're using correct subparser. If error happens, we will simply log it (and maybe jump over unparseable section). 
 	p.ReadSpacing();
-	if (!p.ReadNumberAsInt().HasMatch(var number) { p.LogError("Expected an integer"); number = 0; }
+	if (!p.ReadNumberAsInt().HasMatch(var number) {
+		// We were sure that we're using a correct subparser. This means we're reading a malformed symbol.
+		// Instead of backtracking, we log an error, and possibly jump over bad section before exiting.
+		p.LogError("Expected an integer");
+		number = 0;
+	}
 
-	return p.End(number); // Returns correct or malformed result
+	return p.End(number); // Return correct or malformed result
 }
 
 // Running parser:
@@ -32,9 +36,9 @@ Console.WriteLine(p.ToLogsForTextSource(..scope .()));
 - `IndentedLineBuffer` - helps to convert AST back into raw text by marking indentations via `using (buffer.Shifted)` syntax. While it's not needed for parsing, this type was just too useful to not also include it.
 
 ## Addressing performance concerns
-Q: What are bottlenecks when parsing?
+Q: Is there a measurable overhead?
 
-A: Most often, time is spent not on parsing logic itself, but on allocating final results. This is why it's recommended to use arena allocators in your algorithms. 
+A: Most overhead usually comes not from parsing algorithm itself, but from whichever allocator you've used to allocate a final result of parsing. Which is why it's recommended to use arena allocation.
 
 Q: Don't top-down parsers have exponential time complexity?
 
@@ -42,4 +46,4 @@ A: Theoretically, yes. In practice though, you are the one writing a parser algo
 
 Q: What if I don't want to have any overhead that comes with backtracking approach?
 
-A: Internals of your parsing algorithm can be arbitrary, you can even use a lexer there. The only thing that's required of it - is to advance ParserData pos appropriately once it's done.
+A: Internals of your parsing algorithm can be arbitrary, you can even make use of a lexer. The only thing that's required of it - is to advance ParserData pos appropriately once it's done.
