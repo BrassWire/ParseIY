@@ -18,7 +18,7 @@ public abstract class ExpressionReader<TNode> {
 
 		trimEnd = p.pos;
 		SkipTrivia();
-		if (ReadDistfix(operand).HasMatch(let r)) { return p.Ok(r); }
+		if (ReadDistfix(operand).HasMatch(let r)) { return p.End(r); }
 
 		let infixQueue = scope List<TNode>();
 		while (ReadInfix().HasMatch(let nextInfix)) {
@@ -40,20 +40,20 @@ public abstract class ExpressionReader<TNode> {
 			if (!ReadOperand().HasMatch(out operand)) {
 				p.LogError("Expected operand");
 				for (let exp in infixQueue) { DisposeOfNode(exp); }
-				return p.Ok((TNode) default);
+				return p.End((TNode) default);
 			}
 			trimEnd = p.pos;
 			SkipTrivia();
 		}
 
-		if (infixQueue.IsEmpty) { return p.Ok(operand); }
+		if (infixQueue.IsEmpty) { return p.End(operand); }
 
 		AddArg(infixQueue.Back, operand);
 		for (var i = infixQueue.Count - 2; i >= 0; i--) {
 			AddArg(infixQueue[i], infixQueue[i + 1]);
 		}
 		p.pos = trimEnd;
-		return p.Ok(infixQueue[0]);
+		return p.End(infixQueue[0]);
 	}
 
 	public virtual Parsed<TNode> ReadParenthesizedExpression() {
@@ -67,7 +67,7 @@ public abstract class ExpressionReader<TNode> {
 		if (!ReadExpression().HasMatch(let expression)) { p.LogError("Expected expression"); }
 		SkipTrivia();
 		if (!p.SkipExactly(')')) { p.LogError("Expected ')'"); }
-		return p.Ok(expression);
+		return p.End(expression);
 	}
 
 	/// Parses atom possibly wrapped into unary (prefix/postfix) operators
@@ -108,7 +108,7 @@ public abstract class ExpressionReader<TNode> {
 		}
 
 		p.pos = trimEnd;
-		return p.Ok(tail);
+		return p.End(tail);
 	}
 
 	/// Infix operators: +, -, *, /, &&, &, ||, |

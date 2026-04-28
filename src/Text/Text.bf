@@ -10,7 +10,7 @@ public static
 			ret = true;
 
 		if (!ret) return p.Mismatch;
-		return p.Ok(p.Substring());
+		return p.End(p.Substring());
 	}
 
 	public static Parsed<StringView> ReadInlineSpacing(this ParserData p) {
@@ -21,7 +21,7 @@ public static
 			ret = true;
 
 		if (!ret) return p.Mismatch;
-		return p.Ok(p.Substring());
+		return p.End(p.Substring());
 	}
 
 	[Inline]
@@ -58,7 +58,7 @@ public static
 				return p.Mismatch;
 			} else {
 				if (outOfRange) { p.LogWarning("Number is too large"); }
-				return p.Ok(val);
+				return p.End(val);
 			}
 			unread = false;
 		}
@@ -87,7 +87,7 @@ public static
 			} else if (unread) {
 				return p.Mismatch;
 			} else {
-				return p.Ok(isNegative? -val:val);
+				return p.End(isNegative? -val:val);
 			}
 			unread = false;
 		}
@@ -108,7 +108,7 @@ public static
 	public static Parsed<StringView> ReadKeyword(this ParserData p, StringView name) {
 		p.Start();
 		if (p.SkipExactly(name) && !p.InlineTry(p.Start(), (p.ReadChar8().HasMatch(let ch) && (ch.IsLetterOrDigit || ch == '_'))))
-			return p.Ok(name);
+			return p.End(name);
 		return p.Mismatch;
 	}
 
@@ -122,13 +122,13 @@ public static
 		let qmLen = quotationMark.Length;
 		while (true) {
 			if (p.SkipExactly(quotationMark)) {
-				return p.Ok(p.Substring()[qmLen ..< ^qmLen]);
+				return p.End(p.Substring()[qmLen ..< ^qmLen]);
 			} else if (!p.ReadChar().HasMatch(let ch)) {
 				p.LogError("Quotation did not end");
-				return p.Ok(p.Substring()[qmLen ..< ^0]);
+				return p.End(p.Substring()[qmLen ..< ^0]);
 			} else if (singleLine && ch == '\n') {
 				p.LogError("Unexpected line break inside quoted text");
-				return p.Ok(p.Substring()[qmLen ..< ^1]);
+				return p.End(p.Substring()[qmLen ..< ^1]);
 			} else {
 				continue;
 			}

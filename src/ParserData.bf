@@ -57,9 +57,9 @@ public class ParserData {
 		saves.Add(.(pos, name));
 	}
 
-	/// Should be returned if symbol was recognized. It includes both correct and malformed symbols.
+	/// Should be used if symbol was recognized. It includes both correct and malformed symbols.
 	[NoDiscard]
-	public Parsed<T> Ok<T>(T v) {
+	public Parsed<T> End<T>(T v) {
 		if (tracingIsEnabled && saves.Count > 0 && saves.Back.name != null) {
 			logs.Add(LogEntry(.Trace, null, saves.Back, saves.Back.pos...(Math.Max(saves.Back.pos, pos - 1))));
 		}
@@ -203,7 +203,7 @@ public class ParserData {
 		if (ReadChar().HasMatch(let charA)) {
 			for (let charSpan in charSpans)
 				if (charSpan.0 <= charA && charA <= charSpan.1)
-					return Ok(charA);
+					return End(charA);
 		}
 		return Mismatch;
 	}
