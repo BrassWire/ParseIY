@@ -30,7 +30,7 @@ public struct Parsed<T> {
 	public static Parsed<T> MismatchUntracked => default;
 
 	[Inline]
-	public static Parsed<T> OkUntracked(T v) {
+	public static Parsed<T> EndUntracked(T v) {
 		return .() {
 			MatchedOrDefault = v,
 			HasMatch = true
@@ -42,7 +42,7 @@ public struct Parsed<T> {
 	}
 
 	public static Parsed<T> operator implicit <TOther>(Parsed<TOther> arg) where T: operator implicit TOther {
-		if (arg.HasMatch(let v)) { return Self.OkUntracked(v); }
+		if (arg.HasMatch(let v)) { return Self.EndUntracked(v); }
 		return default;
 	}
 }

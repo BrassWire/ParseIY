@@ -64,7 +64,7 @@ public class ParserData {
 			logs.Add(LogEntry(.Trace, null, saves.Back, saves.Back.pos...(Math.Max(saves.Back.pos, pos - 1))));
 		}
 		saves.PopBack();
-		return .OkUntracked(v);
+		return .EndUntracked(v);
 	}
 
 	/// Should be returned if symbol was not recognized. Triggers backtrack.
@@ -152,7 +152,7 @@ public class ParserData {
 
 	public Parsed<char8> ReadExactly(params Span<char8> options) {
 		for (let i < options.Length) if (SkipExactly(options[i])) {
-			return .OkUntracked(options[i]);
+			return .EndUntracked(options[i]);
 		}
 		return .MismatchUntracked;
 	}
@@ -166,7 +166,7 @@ public class ParserData {
 
 	public Parsed<char32> ReadExactly(params Span<char32> options) {
 		for (let i < options.Length) if (SkipExactly(options[i])) {
-			return .OkUntracked(options[i]);
+			return .EndUntracked(options[i]);
 		}
 		return .MismatchUntracked;
 	}
@@ -180,7 +180,7 @@ public class ParserData {
 
 	public Parsed<StringView> ReadExactly(params Span<StringView> options) {
 		for (let i < options.Length) if (SkipExactly(options[i])) {
-			return .OkUntracked(options[i]);
+			return .EndUntracked(options[i]);
 		}
 		return .MismatchUntracked;
 	}
@@ -192,7 +192,7 @@ public class ParserData {
 
 		let res = TrySilent!(UTF8.TryDecode(&source[pos], source.Length));
 		pos += res.1;
-		return .OkUntracked(res.0);
+		return .EndUntracked(res.0);
 	}
 
 	public Parsed<char32> ReadChar(char32 min, char32 max)
@@ -212,13 +212,13 @@ public class ParserData {
 	public Parsed<uint8> ReadByte() {
 		if (pos >= source.Length)
 			return .MismatchUntracked;
-		return .OkUntracked((uint8)source[pos++]);
+		return .EndUntracked((uint8)source[pos++]);
 	}
 
 	public Parsed<char8> ReadChar8() {
 		if (pos >= source.Length)
 			return .MismatchUntracked;
-		return .OkUntracked(source[pos++]);
+		return .EndUntracked(source[pos++]);
 	}
 
 	public bool SkipByte(uint8 byte)
@@ -228,7 +228,7 @@ public class ParserData {
 	public Parsed<T> ReadBytes<T>() where T: ValueType {
 		if (sizeof(T) > LengthLeft())
 			return .MismatchUntracked;
-		return .OkUntracked(BitConverter.Convert<uint8[sizeof(T)], T>(readBytes<const sizeof(T)>()));
+		return .EndUntracked(BitConverter.Convert<uint8[sizeof(T)], T>(readBytes<const sizeof(T)>()));
 	}
 
 	/// Reads struct directly from reversed order (big-endian) binary
@@ -236,7 +236,7 @@ public class ParserData {
 		if (LengthLeft() >= sizeof(T)) {
 			var bytes = readBytes<const sizeof(T)>();
 			endianSwap(&bytes, sizeof(T));
-			return .OkUntracked(BitConverter.Convert<uint8[sizeof(T)], T>(bytes));
+			return .EndUntracked(BitConverter.Convert<uint8[sizeof(T)], T>(bytes));
 		}
 		return .MismatchUntracked;
 	}

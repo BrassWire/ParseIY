@@ -27,7 +27,7 @@ public static
 	[Inline]
 	public static Parsed<int> ReadDigit(this ParserData p) {
 		if (p.InlineTry(p.Start(), p.ReadChar().HasMatch(let ch) && ch >= '0' && ch <= '9')) {
-			return .OkUntracked(ch - '0');
+			return .EndUntracked(ch - '0');
 		}
 		return .MismatchUntracked;
 	}
@@ -96,10 +96,10 @@ public static
 	/// Word token traditionally used in programming syntax
 	public static Parsed<StringView> ReadKeyword(this ParserData p, StringView name, params Span<StringView> names) {
 		if (p.ReadKeyword(name).HasMatch(let r)) {
-			return .OkUntracked(r);
+			return .EndUntracked(r);
 		}
 		for (let n in names) if (p.ReadKeyword(n).HasMatch(let ret)) {
-			return .OkUntracked(ret);
+			return .EndUntracked(ret);
 		}
 		return .MismatchUntracked;
 	}
