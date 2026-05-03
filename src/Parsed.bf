@@ -4,27 +4,27 @@ namespace ParseIY;
 /// Container for a parse result, initialized via ParserData methods `Ok()` and `Mismatch`.
 /// Parsing can either succeed (even if it logged errors), or it can not happen due to complete syntax mismatch; which is reflected by this structure.
 public struct Parsed<T> {
-	public T MatchedOrDefault;
+	public T ValueOrDefault;
 	public bool HasMatch;
 
 	private this() {
-		MatchedOrDefault = ?;
+		ValueOrDefault = ?;
 		HasMatch = ?;
 	}
 
 	public bool HasMatch(out T value) {
-		value = MatchedOrDefault;
+		value = ValueOrDefault;
 		return HasMatch;
 	}
 		
 	public mixin OrExit(ParserData p) {
 		if (!HasMatch) { return p.Mismatch; }
-		MatchedOrDefault
+		ValueOrDefault
 	}
 
 	public mixin OrBreak() {
 		if (!HasMatch) { break; }
-		MatchedOrDefault
+		ValueOrDefault
 	}
 
 	public static Parsed<T> MismatchUntracked => default;
@@ -32,7 +32,7 @@ public struct Parsed<T> {
 	[Inline]
 	public static Parsed<T> EndUntracked(T v) {
 		return .() {
-			MatchedOrDefault = v,
+			ValueOrDefault = v,
 			HasMatch = true
 		};
 	}
@@ -50,7 +50,7 @@ public struct Parsed<T> {
 extension Parsed<T> where T: ValueType {
 	public static implicit operator Nullable<T>(Parsed<T> arg) {
 		Nullable<T> ret = ?;
-		ret.[Friend]mValue = arg.MatchedOrDefault;
+		ret.[Friend]mValue = arg.ValueOrDefault;
 		ret.[Friend]mHasValue = arg.HasMatch;
 		return ret;
 	}
@@ -58,7 +58,7 @@ extension Parsed<T> where T: ValueType {
 
 extension Parsed<T> where T: class {
 	public static implicit operator T(Parsed<T> arg)
-		=> arg.HasMatch ? arg.MatchedOrDefault : null;
+		=> arg.HasMatch ? arg.ValueOrDefault : null;
 }
 
 extension Parsed<T> where T: void {

@@ -195,10 +195,10 @@ public class ParserData {
 		return .EndUntracked(res.0);
 	}
 
-	public Parsed<char32> ReadChar(char32 min, char32 max)
-		=> ReadChar((min, max));
+	public Parsed<char32> ReadCharBetween(char32 min, char32 max)
+		=> ReadCharBetween((min, max));
 
-	public Parsed<char32> ReadChar(params Span<(char32,char32)> charSpans) {
+	public Parsed<char32> ReadCharBetween(params Span<(char32,char32)> charSpans) {
 		Start();
 		if (ReadChar().HasMatch(let charA)) {
 			for (let charSpan in charSpans)
