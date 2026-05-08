@@ -46,4 +46,4 @@ A: Theoretically, yes. In practice though, you are the one writing a parser algo
 
 Q: What if I don't want to have any overhead that comes with backtracking approach?
 
-A: Internals of your parsing algorithm can be arbitrary, you can even make use of a lexer. The only thing that's required of it - is to advance ParserData pos appropriately once it's done.
+A: Internals of your parsing algorithm can be arbitrary, it can even make use of a lexer, if you don't like scannerless approach. The only thing that's required of it - is to advance ParserData position appropriately once it's done.
