@@ -19,8 +19,8 @@ public static Parsed<int> ReadMyNumber(this ParserData p) {
 
 	return p.End(number); // Return correct or malformed result
 }
-
-// Running parser:
+```
+```beef
 let p = scope ParserData("number a")..ReadMyNumber();
 Console.WriteLine(p.ToLogsForTextSource(..scope .()));
 
